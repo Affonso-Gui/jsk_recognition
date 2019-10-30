@@ -36,12 +36,12 @@
 #ifndef JSK_PERCEPTION_CONSENSUS_TRACKING_H_
 #define JSK_PERCEPTION_CONSENSUS_TRACKING_H_
 
-#include <geometry_msgs/PolygonStamped.h>
 #include <libcmt/CMT.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/exact_time.h>
 #include <message_filters/sync_policies/approximate_time.h>
+#include <jsk_recognition_msgs/RectArray.h>
 #include <jsk_topic_tools/diagnostic_nodelet.h>
 #include <sensor_msgs/Image.h>
 
@@ -55,17 +55,17 @@ namespace jsk_perception
       window_initialized_(false) {}
     typedef message_filters::sync_policies::ApproximateTime<
       sensor_msgs::Image,
-      geometry_msgs::PolygonStamped> ApproximateSyncPolicy;
+      jsk_recognition_msgs::RectArray> ApproximateSyncPolicy;
     typedef message_filters::sync_policies::ExactTime<
       sensor_msgs::Image,
-      geometry_msgs::PolygonStamped> ExactSyncPolicy;
+      jsk_recognition_msgs::RectArray> ExactSyncPolicy;
   protected:
     virtual void onInit();
     virtual void subscribe();
     virtual void unsubscribe();
     virtual void getTrackingResult(const sensor_msgs::Image::ConstPtr& image_msg);
     void setInitialWindow(const sensor_msgs::Image::ConstPtr& img_msg,
-                          const geometry_msgs::PolygonStamped::ConstPtr& poly_msg);
+                          const jsk_recognition_msgs::RectArray::ConstPtr& rect_msg);
 
     ros::Publisher pub_mask_image_;
     ros::Publisher pub_debug_image_;
@@ -74,7 +74,7 @@ namespace jsk_perception
     boost::shared_ptr<message_filters::Synchronizer<ExactSyncPolicy> > sync_;
     boost::shared_ptr<message_filters::Synchronizer<ApproximateSyncPolicy> > async_;
     message_filters::Subscriber<sensor_msgs::Image> sub_image_to_init_;
-    message_filters::Subscriber<geometry_msgs::PolygonStamped> sub_polygon_to_init_;
+    message_filters::Subscriber<jsk_recognition_msgs::RectArray> sub_rect_to_init_;
 
     CMT cmt;
 

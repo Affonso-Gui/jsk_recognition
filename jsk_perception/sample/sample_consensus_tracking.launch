@@ -5,16 +5,29 @@
   <param name="/use_sim_time" value="true" />
   <node name="rosbag_play"
         pkg="rosbag" type="play"
-        args="$(find jsk_perception)/sample/data/2016-10-15-23-21-42_moving_bottle.bag --clock"
+        args="$(find jsk_perception)/sample/data/2016-10-15-23-21-42_moving_bottle.bag --clock --loop"
         required="true">
   </node>
 
   <arg name="INPUT_IMAGE" value="/camera/rgb/image_rect_color" />
 
+  <node name="transform"
+        pkg="topic_tools" type="transform"
+        args="$(arg INPUT_IMAGE)/screenrectangle $(arg INPUT_IMAGE)/rect jsk_recognition_msgs/RectArray
+              'jsk_recognition_msgs.msg.RectArray(
+                   header=m.header,
+                   rects=[
+                       jsk_recognition_msgs.msg.Rect(
+                           x=m.polygon.points[0].x,
+                           y=m.polygon.points[0].y,
+                           width=m.polygon.points[1].x - m.polygon.points[0].x,
+                           height=m.polygon.points[1].y - m.polygon.points[0].y)])'
+              --import jsk_recognition_msgs"/>
+
   <node name="consensus_tracking"
         pkg="jsk_perception" type="consensus_tracking">
     <remap from="~input" to="$(arg INPUT_IMAGE)"/>
-    <remap from="~input/polygon" to="$(arg INPUT_IMAGE)/screenrectangle" />
+    <remap from="~input/rect" to="$(arg INPUT_IMAGE)/rect" />
   </node>
 
   <group if="$(arg gui)">

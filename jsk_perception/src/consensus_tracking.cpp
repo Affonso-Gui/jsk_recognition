@@ -59,17 +59,17 @@ namespace jsk_perception
 
     // subscribers to set initial tracking window.
     sub_image_to_init_.subscribe(*pnh_, "input", 1);
-    sub_polygon_to_init_.subscribe(*pnh_, "input/polygon", 1);
+    sub_rect_to_init_.subscribe(*pnh_, "input/rect", 1);
     if (approximate_sync_)
     {
       async_ = boost::make_shared<message_filters::Synchronizer<ApproximateSyncPolicy> >(queue_size_);
-      async_->connectInput(sub_image_to_init_, sub_polygon_to_init_);
+      async_->connectInput(sub_image_to_init_, sub_rect_to_init_);
       async_->registerCallback(boost::bind(&ConsensusTracking::setInitialWindow, this, _1, _2));
     }
     else
     {
       sync_ = boost::make_shared<message_filters::Synchronizer<ExactSyncPolicy> >(queue_size_);
-      sync_->connectInput(sub_image_to_init_, sub_polygon_to_init_);
+      sync_->connectInput(sub_image_to_init_, sub_rect_to_init_);
       sync_->registerCallback(boost::bind(&ConsensusTracking::setInitialWindow, this, _1, _2));
     }
 
@@ -88,7 +88,7 @@ namespace jsk_perception
   }
 
   void ConsensusTracking::setInitialWindow(const sensor_msgs::Image::ConstPtr& image_msg,
-                                           const geometry_msgs::PolygonStamped::ConstPtr& poly_msg)
+                                           const jsk_recognition_msgs::RectArray::ConstPtr& rect_msg)
   {
     boost::mutex::scoped_lock lock(mutex_);
 
@@ -99,8 +99,9 @@ namespace jsk_perception
     cv::cvtColor(image, gray, CV_BGR2GRAY);
 
     // Set initial rectangle vertices
-    cv::Point2f initial_top_left = cv::Point2f(poly_msg->polygon.points[0].x, poly_msg->polygon.points[0].y);
-    cv::Point2f initial_bottom_right = cv::Point2f(poly_msg->polygon.points[1].x, poly_msg->polygon.points[1].y);
+    cv::Point2f initial_top_left = cv::Point2f(rect_msg->rects[0].x, rect_msg->rects[0].y);
+    cv::Point2f initial_bottom_right = cv::Point2f(rect_msg->rects[0].x + rect_msg->rects[0].width,
+                                                   rect_msg->rects[0].y + rect_msg->rects[0].height);
 
     cmt.initialise(gray, initial_top_left, initial_bottom_right);
     window_initialized_ = true;
